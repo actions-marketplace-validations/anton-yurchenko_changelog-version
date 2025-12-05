@@ -10,12 +10,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Init
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: "1.20"
+          go-version: "1.21"
 
       - name: Install Dependencies
         run: go get -v -t -d ./...
@@ -31,7 +31,7 @@ jobs:
         run: go test -v $(go list ./... | grep -v vendor | grep -v mocks) -race -coverprofile=coverage.txt -covermode=atomic
 
       - name: Upload Code Coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.txt
@@ -39,7 +39,7 @@ jobs:
           name: release
           fail_ci_if_error: false
 
-  codeql:
+  analyze:
     name: Analyze
     runs-on: ubuntu-latest
     timeout-minutes: 360
@@ -49,30 +49,33 @@ jobs:
       security-events: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
+        uses: github/codeql-action/init@v3
         with:
           languages: 'go'
 
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v2
+        uses: github/codeql-action/autobuild@v3
         
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@v3
         with:
-          category: "/language:go"        
+          category: "/language:go"  
+      
+      - name: Go Vulnerability Check
+        uses: Templum/govulncheck-action@v1
 
   release:
     name: Release
     runs-on: ubuntu-latest
-    needs: [test, codeql]
+    needs: [test, analyze]
     env:
       APP_NAME: changelog-version
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Prepare Version Tags
         run: |
@@ -82,16 +85,16 @@ jobs:
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: antonyurchenko
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
       - name: Login to GitHub Packages Docker Registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
