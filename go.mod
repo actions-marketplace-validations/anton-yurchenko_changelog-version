@@ -1,13 +1,14 @@
 module changelog-version
 
-go 1.21
+go 1.22.0
+
 toolchain go1.22.5
 
 require (
 	github.com/anton-yurchenko/go-changelog v1.1.0
 	github.com/go-git/go-git/v5 v5.12.0
 	github.com/spf13/afero v1.11.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.11.1
 	golang.org/x/mod v0.22.0
 )
 
